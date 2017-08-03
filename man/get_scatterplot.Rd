@@ -4,7 +4,7 @@
 \alias{get_scatterplot}
 \title{Make scatterplot with errorbars}
 \usage{
-get_scatterplot(x_arrs, x_labs, x_u, fldr)
+get_scatterplot(x_arrs, x_labs, x_u, fname, fldr)
 }
 \arguments{
 \item{x_arrs}{An array of numbers}
