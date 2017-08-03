@@ -244,3 +244,12 @@ make_all <- function(){
   #                fldr = out_folder)
 
 }
+
+#install.packages("gridExtra")
+#library(gridExtra)
+#out_folder <- "/Users/olivo.martino/Desktop/DatiEsempio"
+#pdf(paste(out_folder,"data_output.pdf",sep="/"),
+#    height=11,
+#    width=8.5)
+#grid.table(df)
+#dev.off()
