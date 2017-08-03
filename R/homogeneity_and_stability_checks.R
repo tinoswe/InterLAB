@@ -71,3 +71,86 @@ get_scatterplot <- function(x_arrs,
          code=3)
 
 }
+
+#' Get list of files in folder
+#'
+#' Takes in the folder name and gets all Excel files in it
+#' @param folder Folder name
+#' @return flist List of files in folder
+#' @export
+get_files_from_folder <- function(folder){
+  flist <- list.files(folder,
+                      pattern = "*.xlsx")
+  return(flist)
+}
+
+#' Read xlsx files and store data
+#'
+#' Stores all data into appropriate R object
+#' @return flist List of files in folder
+#' @export
+read_data <- function(){
+
+  library(readxl)
+
+  folder_path <- "/Users/olivo.martino/Desktop/DatiEsempio"
+  flist <- get_files_from_folder(folder_path)
+
+  df <- data.frame(lab = character(),
+                   cal1 = as.numeric(),
+                   cal2 = as.numeric(),
+                   cal3 = as.numeric(),
+                   cal4 = as.numeric(),
+                   f_bpa_1 = as.numeric(),
+                   f_bpa_2 = as.numeric(),
+                   v_bpa_1 = as.numeric(),
+                   v_bpa_2 = as.numeric(),
+                   stringsAsFactors = FALSE)
+  i <- 1
+  for (f in flist){
+
+    f_path <- paste(folder_path,
+                    f,
+                    sep="/")
+
+    labname <- read_excel(f_path,
+                          range = "E12",
+                          col_names = c("lname"))
+    df[i,1] <- labname$lname
+
+    cal_vals <- read_excel(f_path,
+                           range = "E18:H18",
+                           col_names = c("c1","c2","c3","c4"))
+
+    df[i,2] <- cal_vals$c1
+    df[i,3] <- cal_vals$c2
+    df[i,4] <- cal_vals$c3
+    df[i,5] <- cal_vals$c4
+
+    fish_bpa_1 <- read_excel(f_path,
+                           range = "E22",
+                           col_names = c("fish_bpa_1"))
+    df[i,6] <- fish_bpa_1$fish_bpa_1
+
+    fish_bpa_2 <- read_excel(f_path,
+                             range = "G22",
+                             col_names = c("fish_bpa_2"))
+    df[i,7] <- fish_bpa_2$fish_bpa_2
+
+    vegs_bpa_1 <- read_excel(f_path,
+                             range = "E26",
+                             col_names = c("vegs_bpa_1"))
+    df[i,8] <- vegs_bpa_1$vegs_bpa_1
+
+    vegs_bpa_2 <- read_excel(f_path,
+                             range = "G26",
+                             col_names = c("vegs_bpa_2"))
+    df[i,9] <- vegs_bpa_2$vegs_bpa_2
+
+
+    i <- i +1
+  }
+
+
+  return(df)
+}
