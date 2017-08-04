@@ -21,66 +21,7 @@ z_score <- function(x, mu, sigma){
   return(z)
 }
 
-#' Make scatterplot with errorbars
-#'
-#' Takes in an array of means, an array of labels and an array of uncertainties and makes scatterplot with errorbars
-#' @param x_arrs An array of numbers
-#' @param x_labs An array of x-labels
-#' @param x_u An array of uncertainties
-#' @param fldr Folder name where to save the chart
-#' @export
-get_scatterplot <- function(x_arrs,
-                            x_labs,
-                            x_u,
-                            fname,
-                            fldr){
 
-  png(filename=paste(fldr,fname,sep="/"),
-      width = 10,
-      height = 8,
-      units = 'in',
-      res = 300)
-
-  x_i <- seq(1,
-             length(x_arrs),
-             by=1)
-
-  d = data.frame(
-    x  = x_i,
-    y  = x_arrs,
-    xl = x_labs,
-    sd = x_u)
-
-
-  plot(d$x,
-       d$y,
-       pch=20,
-       col="black",
-       xlim=c(0,length(d$x)+1),
-       ylim=c(mean(d$y) - 4*(sd(d$y)),
-              mean(d$y) + 4*(sd(d$y))),
-       #bty="n",
-       axes="F",
-       xlab = "",
-       ylab = "")
-
-  axis(1,
-       at = d$x,
-       labels = d$xl)
-
-  axis(2)
-
-  arrows(d$x,
-         d$y - 0.5*d$sd,
-         d$x,
-         d$y + 0.5*d$sd,
-         length=0.02,
-         angle=90,
-         code=3)
-
-  dev.off()
-
-}
 
 #' Get list of files in folder
 #'
@@ -164,18 +105,28 @@ make_data_frame <- function(){
   return(df)
 }
 
-#' Get simple mu and sigma
+#' Get mu
 #'
-#' Takes in an array of numbers and returns mu and sigma
+#' Takes in an array of numbers and returns mu
 #' @param arr_in An array of numbers
-#' @return arr_out An two elements array: mu and sigma
+#' @return mu Mu
 #' @export
-get_mu_sigma <- function(arr_in){
+get_mu <- function(arr_in){
 
   mu <- median(arr_in)
-  sigma <- sd(arr_in)
-  arr_out <- c(mu, sigma)
-  return(arr_out)
+  return(mu)
+}
+
+#' Get sigma
+#'
+#' Takes in an array of numbers and returns sigma
+#' @param arr_in An array of numbers
+#' @return sigma Sigma
+#' @export
+get_sigma <- function(arr_in){
+
+  sigma <- sd(arr_in)/sqrt(length(arr_in))
+  return(sigma)
 }
 
 #' Makes bar plot
@@ -190,7 +141,7 @@ make_bar_plot <- function(df, var_name){
   out_folder <- "/Users/olivo.martino/Desktop/DatiEsempio"
 
   png(filename=paste(out_folder,
-                     paste(var_name,".png",sep=""),
+                     paste(var_name,"_zscore.png",sep=""),
                      sep="/"),
       width = 10,
       height = 8,
@@ -200,15 +151,15 @@ make_bar_plot <- function(df, var_name){
   df <- df[,c("lab",var_name)]
 
   zs <- z_score(x=df[,var_name],
-                mu=median(df[,var_name]),
-                sigma=sd(df[,var_name]))
+                mu=get_mu(df[,var_name]), #the mu-sigma stimator must go into a separate function
+                sigma=get_sigma(df[,var_name]))
   df[,"zs"] <- zs
 
   df <- df[order(df[3]),]
 
   barplot(df[,"zs"],
           names.arg = df[,"lab"],
-          ylim=c(-3,3),
+          ylim=c(-10,10),
           space=2)
   title(main=var_name,
         ylab = "z-score")
@@ -217,6 +168,97 @@ make_bar_plot <- function(df, var_name){
   dev.off()
   }
 
+#'takes in variable name and makes scatterplot
+#' @param df frame
+#' @param var_name var name as string
+#' @export
+make_scatter_plot <- function(df, var_name){
+
+  #folder where to save charts
+  out_folder <- "/Users/olivo.martino/Desktop/DatiEsempio"
+
+  png(filename=paste(out_folder,
+                     paste(var_name,"_scatterplot.png",sep=""),
+                     sep="/"),
+      width = 10,
+      height = 8,
+      units = 'in',
+      res = 300)
+
+  df <- df[,c("lab",var_name)]
+
+  df$x_i <- seq(1,
+                length(df[,var_name]),
+                by=1)
+
+  plot(df[,"x_i"],
+       df[,var_name],
+       pch=20,
+       col="black",
+       xlim=c(0,length(df[,var_name])+1),
+       ylim=c(mean(df[,var_name]) - 4*(sd(df[,var_name])),
+              mean(df[,var_name]) + 4*(sd(df[,var_name]))),
+       #bty="n",
+       axes="F",
+       xlab = "",
+       ylab = "")
+
+  axis(1,
+       at = df[,"x_i"],
+       labels = df[,"lab"])
+
+  axis(2)
+
+  df$sd <- sd(df[,var_name])
+
+  arrows(df[,"x_i"],
+         df[,var_name] - 0.5*df[,"sd"],
+         df[,"x_i"],
+         df[,var_name] + 0.5*df[,"sd"],
+         length=0.02,
+         angle=90,
+         code=3)
+
+  title(main=var_name,
+        #xlab="XX",
+        ylab = var_name)
+  abline(h=get_mu(df[,var_name]),
+         col="red",
+         lwd=2,
+         lty=2)
+
+  dev.off()
+
+}
+
+#'takes in variable name and makes table
+#' @param df frame
+#' @param var_name var name as string
+#' @export
+make_table <- function(df, var_name){
+
+  library(gridExtra)
+  out_folder <- "/Users/olivo.martino/Desktop/DatiEsempio"
+  pdf(paste(out_folder,
+            paste(var_name,
+                  "_table.pdf",
+                  sep=""),
+            sep="/"),
+      height=11,
+      width=8.5)
+
+  df <- df[,c("lab",var_name)]
+  df[,"unc"] <- round(sd(df[,var_name]),4)
+
+  zs <- z_score(x=df[,var_name],
+                mu=get_mu(df[,var_name]), #the mu-sigma stimator must go into a separate function
+                sigma=get_sigma(df[,var_name]))
+  df[,"zs"] <- round(zs,4)
+
+  grid.table(df)
+
+  dev.off()
+}
 
 #' Makes it all
 #'
@@ -237,19 +279,25 @@ make_all <- function(){
   make_bar_plot(df,"v_bpa_1")
   make_bar_plot(df,"v_bpa_2")
 
-  #get_scatterplot(x_arrs = df$cal1,
-  #                x_labs = df$lab,
-  #                x_u = sqrt(df$cal1)/12,
-  #                fname = "test.png",
-  #                fldr = out_folder)
+  #scatterplots of column values
+  make_scatter_plot(df,"cal1")
+  make_scatter_plot(df,"cal2")
+  make_scatter_plot(df,"cal3")
+  make_scatter_plot(df,"cal4")
+  make_scatter_plot(df,"f_bpa_1")
+  make_scatter_plot(df,"f_bpa_2")
+  make_scatter_plot(df,"v_bpa_1")
+  make_scatter_plot(df,"v_bpa_2")
+
+  #tables relative to variables
+  make_table(df,"cal1")
+  make_table(df,"cal2")
+  make_table(df,"cal3")
+  make_table(df,"cal4")
+  make_table(df,"f_bpa_1")
+  make_table(df,"f_bpa_2")
+  make_table(df,"v_bpa_1")
+  make_table(df,"v_bpa_2")
 
 }
 
-#install.packages("gridExtra")
-#library(gridExtra)
-#out_folder <- "/Users/olivo.martino/Desktop/DatiEsempio"
-#pdf(paste(out_folder,"data_output.pdf",sep="/"),
-#    height=11,
-#    width=8.5)
-#grid.table(df)
-#dev.off()
